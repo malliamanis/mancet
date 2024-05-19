@@ -28,8 +28,8 @@ SRC         = $(call rwildcard, src, *.c)
 OBJ_DEB     = $(patsubst src/%.c, $(OBJ_DEB_DIR)/%.o, $(SRC))
 OBJ_REL     = $(patsubst src/%.c, $(OBJ_REL_DIR)/%.o, $(SRC))
 
-EXE_DEB = $(DEB_DIR)/cgraph
-EXE_REL = $(REL_DIR)/cgraph
+EXE_DEB = $(DEB_DIR)/mancet
+EXE_REL = $(REL_DIR)/mancet
 
 .PHONY: debug release run clean
 
