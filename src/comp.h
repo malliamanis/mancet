@@ -6,7 +6,6 @@
 #include "mancet.h"
 
 vec2  comp_square(vec2 z);
-float comp_abs_no_sqrt(vec2 z);
 vec2  comp_add(vec2 z1, vec2 z2);
 
 #endif
