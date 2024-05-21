@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <complex.h>
 
+#include "util.h"
 #include "mancet.h"
 
 #define TITLE "ManCet"
@@ -13,9 +14,14 @@
 #define DEFAULT_SCALE  200
 #define DEFAULT_OFFSET_X 0
 #define DEFAULT_OFFSET_Y 0
-#define DEFAULT_ITERATIONS 50
+#define DEFAULT_ITERATIONS 100
 #define DEFAULT_ITERATIONS_INCREASE 250
 #define DEFAULT_ZOOM_FACTOR 1.5
+
+typedef enum {
+	COLORSCHEME_HSV = 0,
+	COLORSCHEME_GRAYSCALE = 1
+} Colorscheme;
 
 void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_width)
 {
@@ -28,6 +34,7 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 
 	bool redraw      = true;
 	uint32_t *pixels = calloc(width * height, sizeof *pixels);
+	Colorscheme colorscheme = COLORSCHEME_HSV;
 
 	bool replot         = true;
 	vec2 size_half      = { width / 2.0, height / 2.0 };
@@ -63,6 +70,7 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 
 	int32_t mouse_last_x, mouse_last_y;
 	int32_t mouse_scroll_amount;
+	bool c_key_down = false;
 
 	const uint32_t y_render_freq = height >> 2;
 
@@ -108,6 +116,17 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 		if (keys[SDL_SCANCODE_ESCAPE])
 			quit = true;
 
+		if (keys[SDL_SCANCODE_C]) {
+			if (!c_key_down) {
+				c_key_down = true;
+
+				colorscheme = !colorscheme;
+				replot = true;
+			}
+		}
+		else
+			c_key_down = false;
+
 		if (mouse_scroll_amount > 0) {
 			scale *= DEFAULT_ZOOM_FACTOR;
 
@@ -140,6 +159,7 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 		}
 
 		if (keys[SDL_SCANCODE_SPACE]) {
+			colorscheme = COLORSCHEME_HSV;
 			offset = (vec2) { 0.0f, 0.0f };
 			scale = DEFAULT_SCALE;
 			iterations = DEFAULT_ITERATIONS;
@@ -191,11 +211,20 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 					uint32_t color = 0xFF000000;
 
 					if (i < iterations - 1) {
-						uint32_t brightness = 0xCC - (i * 0xCC / iterations);
+						switch (colorscheme) {
+							case COLORSCHEME_HSV:
+								color += util_hsv_to_rgb(360.0f * i / iterations, 1.0f, 1.0f);
+								break;
+							case COLORSCHEME_GRAYSCALE:
+								{
+									uint32_t brightness = 0xFF * (float)i / iterations;
 
-						color += brightness << 16; // R
-						color += brightness << 8;  // G
-						color += brightness;       // B
+									color += brightness << 16; // r
+									color += brightness << 8;  // g
+									color += brightness;       // b
+								}
+								break;
+						}
 					}
 
 					pixels[x + y * width] = color;
