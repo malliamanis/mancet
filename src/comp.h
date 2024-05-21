@@ -5,7 +5,8 @@
 
 #include "mancet.h"
 
-vec2  comp_square(vec2 z);
-vec2  comp_add(vec2 z1, vec2 z2);
+vec2 comp_square(vec2 z);
+vec2 comp_mul(vec2 z1, vec2 z2);
+vec2 comp_add(vec2 z1, vec2 z2);
 
 #endif

@@ -32,7 +32,7 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 
 	bool replot         = true;
 	vec2 size_half      = { width / 2.0, height / 2.0 };
-	double scale         = DEFAULT_SCALE;
+	double scale        = DEFAULT_SCALE;
 	vec2 offset         = { 0.0f, 0.0f };
 	uint32_t iterations = DEFAULT_ITERATIONS;
 	bool iterations_changed = true;
@@ -43,8 +43,8 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 		TITLE,
 		SDL_WINDOWPOS_CENTERED_DISPLAY(0),
 		SDL_WINDOWPOS_CENTERED_DISPLAY(0),
-		width,
-		height,
+		window_width,
+		window_height,
 		SDL_WINDOW_ALLOW_HIGHDPI
 	);
 
@@ -65,7 +65,7 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 	int32_t mouse_last_x, mouse_last_y;
 	int32_t mouse_scroll_amount;
 
-	const uint32_t y_render_freq = height >> 3;
+	const uint32_t y_render_freq = height >> 2;
 
 	const uint32_t ticks_per_second = 60;
 	double time_step_scaled = (1.0 / ticks_per_second) * SDL_GetPerformanceFrequency();
@@ -93,8 +93,8 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 					break;
 				case SDL_MOUSEBUTTONUP:
 					if (event.button.button == SDL_BUTTON_LEFT) {
-						offset.x += event.button.x - mouse_last_x;
-						offset.y += event.button.y - mouse_last_y;
+						offset.x += (double)(event.button.x - mouse_last_x) / pixel_width;
+						offset.y += (double)(event.button.y - mouse_last_y) / pixel_width;
 
 						replot = true;
 					}
@@ -140,6 +140,14 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 			replot = true;
 		}
 
+		if (keys[SDL_SCANCODE_SPACE]) {
+			offset = (vec2) { 0.0f, 0.0f };
+			scale = DEFAULT_SCALE;
+			iterations = DEFAULT_ITERATIONS;
+
+			replot = true;
+		}
+
 		if (iterations_changed) {
 			iterations_changed = false;
 
@@ -170,27 +178,32 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 						(y + offset.y - size_half.y) / scale 
 					};
 
-					uint32_t color;
-					double rate_of_change = 0.0;
+					float rate_of_change = 0.0;
 
+					uint32_t i;
 					vec2 z0 = { 0.0, 0.0 }, z1;
-					for (uint32_t i = 0; i < iterations; ++i) {
+
+					for (i = 0; i < iterations; ++i) {
 						// Z(n) = Z(n-1)^2 + c
-						z1 = comp_add(comp_square(z0), c);
+						z1 = comp_add(comp_square(comp_square(z0)), c);
 						z0 = z1;
 
 						rate_of_change += z1.x * z1.x + z1.y * z1.y;
 
-						if (isnan(rate_of_change) || isinf(rate_of_change)) {
-							color = 0xFFFFFFFF;
-							goto skip_black;
-						}
+						if (isnan(rate_of_change) || isinf(rate_of_change))
+							break;
 					}
 
-					color =  0x00;
+					uint32_t color = 0xFF000000;
 
-					skip_black:
-					
+					if (i < iterations - 1) {
+						uint32_t brightness = (i * 10) % 0xFF;
+
+						color += brightness;
+						color += brightness << 8;
+						color += brightness << 16;
+					}
+
 					pixels[x + y * width] = color;
 				}
 
@@ -208,8 +221,6 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 		if (redraw) {
 			redraw = false;
 			SDL_UpdateTexture(screen, NULL, pixels, width * sizeof(*pixels));
-
-			memset(pixels, 0x00, width * height * sizeof(*pixels));
 		}
 
 		SDL_RenderCopyEx(renderer, screen, NULL, NULL, 0.0, NULL, SDL_FLIP_VERTICAL);

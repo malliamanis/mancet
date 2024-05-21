@@ -12,3 +12,4 @@ $ ./build/release/mancet
 Click and drag to navigate <br>
 Use scrollwheel to zoom in and out <br>
 Use UP and DOWN keys to increase and decrease the amount of iterations
+Press SPACE to reset
