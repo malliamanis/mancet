@@ -10,7 +10,7 @@
 
 #define TITLE "ManCet"
 
-#define DEFAULT_SCALE  100
+#define DEFAULT_SCALE  200
 #define DEFAULT_OFFSET_X 0
 #define DEFAULT_OFFSET_Y 0
 #define DEFAULT_ITERATIONS 50
@@ -175,30 +175,27 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 					complex double c = (x - offset.x - size_half.x) + (y + offset.y - size_half.y) * I;
 					c /= scale;
 
-					float rate_of_change = 0.0;
-
 					uint32_t i;
-					complex double z = 0;
+					complex double z = c;
 
 					for (i = 0; i < iterations; ++i) {
-						// const double temp = cabsl(z1);
+						z = z*z + c;
 
-						z = z * z + c;
+						double real = creal(z);
+						double imag = cimag(z);
 
-						rate_of_change += creal(z) * creal(z) + cimag(z) * cimag(z);
-
-						if (isinf(rate_of_change))
+						if (real*real + imag*imag > 4.0)
 							break;
 					}
 
 					uint32_t color = 0xFF000000;
 
 					if (i < iterations - 1) {
-						uint32_t brightness = (i * 10) % 0xFF;
+						uint32_t brightness = 0xCC - (i * 0xCC / iterations);
 
-						color += brightness;
-						color += brightness << 8;
-						color += brightness << 16;
+						color += brightness << 16; // R
+						color += brightness << 8;  // G
+						color += brightness;       // B
 					}
 
 					pixels[x + y * width] = color;
