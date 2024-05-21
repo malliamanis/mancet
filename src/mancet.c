@@ -1,12 +1,11 @@
 #include <SDL2/SDL.h>
 
-#include <SDL2/SDL_mouse.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <complex.h>
 
-#include "comp.h"
 #include "mancet.h"
 
 #define TITLE "ManCet"
@@ -173,24 +172,22 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 
 			for (uint32_t y = 0; y < height; ++y) {
 				for (uint32_t x = 0; x < width; ++x) {
-					vec2 c = {
-						(x - offset.x - size_half.x) / scale,
-						(y + offset.y - size_half.y) / scale 
-					};
+					complex double c = (x - offset.x - size_half.x) + (y + offset.y - size_half.y) * I;
+					c /= scale;
 
 					float rate_of_change = 0.0;
 
 					uint32_t i;
-					vec2 z0 = { 0.0, 0.0 }, z1;
+					complex double z = 0;
 
 					for (i = 0; i < iterations; ++i) {
-						// Z(n) = Z(n-1)^2 + c
-						z1 = comp_add(comp_square(comp_square(z0)), c);
-						z0 = z1;
+						// const double temp = cabsl(z1);
 
-						rate_of_change += z1.x * z1.x + z1.y * z1.y;
+						z = z * z + c;
 
-						if (isnan(rate_of_change) || isinf(rate_of_change))
+						rate_of_change += creal(z) * creal(z) + cimag(z) * cimag(z);
+
+						if (isinf(rate_of_change))
 							break;
 					}
 
