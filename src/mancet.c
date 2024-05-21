@@ -217,7 +217,7 @@ void mancet_run(uint32_t window_width, uint32_t window_height, uint32_t pixel_wi
 								break;
 							case COLORSCHEME_GRAYSCALE:
 								{
-									uint32_t brightness = 0xFF * (float)i / iterations;
+									uint32_t brightness = 0xFF * (double)i / iterations;
 
 									color += brightness << 16; // r
 									color += brightness << 8;  // g
